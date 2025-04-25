@@ -60,7 +60,7 @@ Chrome 多窗口管理器是一款专门为 `NoBiggie社区` 准备的Chrome浏�
    ```
 
 2. **准备文件**
-   - 确保目录里有以下文件：
+   - 在本页面下载程序最新版压缩包，并确保目录里有以下文件：
      - chrome_manager.py（主程序）
      - build.py（打包脚本）
      - app.manifest（管理员权限配置）
