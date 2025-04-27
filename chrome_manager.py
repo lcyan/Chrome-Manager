@@ -222,14 +222,32 @@ class ChromeManager:
                 # Windows 10使用win32gui通知
                 self.hwnd = win32gui.GetForegroundWindow()
                 self.notification_flags = win32gui.NIF_ICON | win32gui.NIF_INFO | win32gui.NIF_TIP
+                
+                # 加载app.ico图标
+                try:
+                    icon_path = os.path.join(os.path.dirname(__file__), "app.ico")
+                    if os.path.exists(icon_path):
+                        # 加载应用程序图标
+                        icon_handle = win32gui.LoadImage(
+                            0, icon_path, win32con.IMAGE_ICON, 
+                            0, 0, win32con.LR_LOADFROMFILE | win32con.LR_DEFAULTSIZE
+                        )
+                    else:
+                        # 使用默认图标
+                        icon_handle = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)
+                except Exception as e:
+                    print(f"加载托盘图标失败: {str(e)}")
+                    icon_handle = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)
+                
                 self.notify_id = (
                     self.hwnd, 
                     0,
                     self.notification_flags,
                     win32con.WM_USER + 20,
-                    win32gui.LoadIcon(0, win32con.IDI_APPLICATION),
+                    icon_handle,
                     "Chrome多窗口管理器"
                 )
+                
                 # 先注册托盘图标
                 try:
                     win32gui.Shell_NotifyIcon(win32gui.NIM_ADD, self.notify_id)
@@ -916,23 +934,43 @@ class ChromeManager:
                     if not hasattr(self, 'notify_id'):
                         self.hwnd = win32gui.GetForegroundWindow()
                         self.notification_flags = win32gui.NIF_ICON | win32gui.NIF_INFO | win32gui.NIF_TIP
+                        
+                        # 加载app.ico图标
+                        try:
+                            icon_path = os.path.join(os.path.dirname(__file__), "app.ico")
+                            if os.path.exists(icon_path):
+                                # 加载应用程序图标
+                                icon_handle = win32gui.LoadImage(
+                                    0, icon_path, win32con.IMAGE_ICON, 
+                                    0, 0, win32con.LR_LOADFROMFILE | win32con.LR_DEFAULTSIZE
+                                )
+                            else:
+                                # 使用默认图标
+                                icon_handle = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)
+                        except Exception as e:
+                            print(f"加载托盘图标失败: {str(e)}")
+                            icon_handle = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)
+                        
                         self.notify_id = (
                             self.hwnd, 
                             0,
                             self.notification_flags,
                             win32con.WM_USER + 20,
-                            win32gui.LoadIcon(0, win32con.IDI_APPLICATION),
+                            icon_handle,
                             "Chrome多窗口管理器"
                         )
                         win32gui.Shell_NotifyIcon(win32gui.NIM_ADD, self.notify_id)
 
+                    # 获取当前图标句柄
+                    icon_handle = self.notify_id[4]
+                    
                     # 准备通知数据
                     notify_data = (
                         self.hwnd,
                         0,
                         self.notification_flags,
                         win32con.WM_USER + 20,
-                        win32gui.LoadIcon(0, win32con.IDI_APPLICATION),
+                        icon_handle,
                         "Chrome多窗口管理器",  # 托盘提示
                         message,  # 通知内容
                         1000,    # 1秒 = 1000毫秒
@@ -1566,6 +1604,14 @@ class ChromeManager:
             self.save_settings()
             # 保存窗口位置
             self.save_window_position()
+            
+            # 移除系统托盘图标
+            if not self.is_win11 and hasattr(self, 'notify_id'):
+                try:
+                    win32gui.Shell_NotifyIcon(win32gui.NIM_DELETE, self.notify_id)
+                    print("已移除系统托盘图标")
+                except Exception as e:
+                    print(f"移除系统托盘图标失败: {str(e)}")
             
             # 关闭所有Chrome窗口
             if hasattr(self, 'close_all_windows') and messagebox.askyesno("确认", "关闭所有Chrome窗口?"):
