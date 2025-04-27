@@ -45,7 +45,7 @@ Chrome 多窗口管理器是一款专门为 `NoBiggie社区` 准备的Chrome浏�
 - Chrome浏览器 最新
 
 ## ❇️ 运行教程
-## 🎬️ 视频版教程请移步本人推特这篇推文观看 [![X](https://img.shields.io/badge/本程序视频教程已发布在更新推文中-1DA1F2.svg?style=flat&logo=x&logoColor=white)](https://x.com/DevilflasherX) 
+## 🎬️ 视频版教程请移步本人推特这篇推文观看 [![X](https://img.shields.io/badge/本程序视频教程已发布在更新推文中-1DA1F2.svg?style=flat&logo=x&logoColor=white)]([https://x.com/DevilflasherX](https://x.com/DevilflasherX/status/1916487254891274703)) 
 
 
 
