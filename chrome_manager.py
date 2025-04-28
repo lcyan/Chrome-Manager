@@ -122,26 +122,17 @@ class ChromeManager:
         except Exception as e:
             print(f"设置图标失败: {str(e)}")
         
-        # 设置更大的窗口大小，以适应不同DPI设置和字体大小
-        self.window_width = 740
-        self.window_height = 400
+        # 设置固定的窗口大小
+        self.window_width = 700
+        self.window_height = 360
         self.root.geometry(f"{self.window_width}x{self.window_height}")
-        # 允许窗口调整大小，以适应不同显示设置
-        self.root.resizable(True, True)
-        # 设置最小窗口尺寸，避免过小导致组件显示不全
-        self.root.minsize(700, 360)
+        self.root.resizable(False, False)
         
-        # 添加DPI感知支持，确保在高分辨率显示器上显示正常
-        try:
-            from ctypes import windll
-            # 启用Per-Monitor DPI感知
-            windll.shcore.SetProcessDpiAwareness(2)  # PROCESS_PER_MONITOR_DPI_AWARE
-        except Exception as e:
-            print(f"设置DPI感知失败: {str(e)}")
+        # 设置关闭事件处理
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-        # 设置样式
-        self.create_styles()
-        
+        # 加载主题
+        sv_ttk.set_theme("light")
         print(f"[{time.time() - self.start_time:.3f}s] 主题加载完成")
         
         # 仅保存/加载窗口位置，不包括大小
@@ -204,11 +195,14 @@ class ChromeManager:
         self.last_move_time = 0
         self.move_interval = 0.016
         
-        # 设置关闭事件处理
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        # 创建样式
+        self.create_styles()
         
         # 创建界面
-        self.create_widgets()  
+        self.create_widgets()
+        
+        # 更新树形视图样式
+        self.update_treeview_style()
         
         # 窗口尺寸已在初始化时固定，无需再次调整
 
@@ -288,9 +282,6 @@ class ChromeManager:
         print(f"[{time.time() - self.start_time:.3f}s] __init__ 完成, 已安排延迟初始化")
 
     def create_styles(self):
-        # 加载主题
-        sv_ttk.set_theme("light")
-        
         style = ttk.Style()
         
         default_font = ('Microsoft YaHei UI', 9)
@@ -308,18 +299,19 @@ class ChromeManager:
         style.configure('TLabelframe.Label', font=default_font)
         style.configure('TNotebook.Tab', font=default_font)
         
-        if self.window_list:
-            self.window_list.tag_configure("master", 
-                background="#0d6efd",
-                foreground='white'
-            )
-        
         # 链接样式
         style.configure('Link.TLabel',
             foreground='#0d6efd',
             cursor='hand2',
             font=('Microsoft YaHei UI', 9, 'underline')
         )
+        
+    def update_treeview_style(self):
+        """更新Treeview组件的样式，此方法应在window_list初始化后调用"""
+        if self.window_list:
+            self.window_list.tag_configure("master", 
+                background="#0d6efd",
+                foreground="white")
 
     def create_widgets(self):
         """创建界面元素"""
@@ -341,23 +333,17 @@ class ChromeManager:
         
         # 第一行：基本操作按钮
         first_row = ttk.Frame(button_rows)
-        first_row.pack(fill=tk.X, expand=True)
+        first_row.pack(fill=tk.X)
         
-        button_frame_left = ttk.Frame(first_row)
-        button_frame_left.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        
-        button_frame_right = ttk.Frame(first_row)
-        button_frame_right.pack(side=tk.RIGHT, fill=tk.X)
-        
-        ttk.Button(button_frame_left, text="导入窗口", command=self.import_windows, style='Accent.TButton').pack(side=tk.LEFT, padx=2)
-        select_all_label = ttk.Label(button_frame_left, textvariable=self.select_all_var, style='Link.TLabel')
+        ttk.Button(first_row, text="导入窗口", command=self.import_windows, style='Accent.TButton').pack(side=tk.LEFT, padx=2)
+        select_all_label = ttk.Label(first_row, textvariable=self.select_all_var, style='Link.TLabel')
         select_all_label.pack(side=tk.LEFT, padx=5)
         select_all_label.bind('<Button-1>', self.toggle_select_all)
-        ttk.Button(button_frame_left, text="自动排列", command=self.auto_arrange_windows).pack(side=tk.LEFT, padx=2)
-        ttk.Button(button_frame_left, text="关闭选中", command=self.close_selected_windows).pack(side=tk.LEFT, padx=2)
+        ttk.Button(first_row, text="自动排列", command=self.auto_arrange_windows).pack(side=tk.LEFT, padx=2)
+        ttk.Button(first_row, text="关闭选中", command=self.close_selected_windows).pack(side=tk.LEFT, padx=2)
         
         self.sync_button = ttk.Button(
-            button_frame_right,
+            first_row,
             text="▶ 开始同步",
             command=self.toggle_sync,
             style='Accent.TButton'
@@ -366,7 +352,7 @@ class ChromeManager:
         
         # 添加设置按钮
         ttk.Button(
-            button_frame_right,
+            first_row,
             text="🔗 设置",
             command=self.show_settings_dialog,
             width=8
@@ -390,10 +376,10 @@ class ChromeManager:
         self.window_list.heading("master", text="主控")
         self.window_list.heading("hwnd", text="")
         
-        self.window_list.column("select", width=50, anchor="center", minwidth=40)
-        self.window_list.column("number", width=70, anchor="center", minwidth=60)
-        self.window_list.column("title", width=290, minwidth=200, stretch=True)  # 允许标题列伸缩
-        self.window_list.column("master", width=60, anchor="center", minwidth=50)
+        self.window_list.column("select", width=50, anchor="center")
+        self.window_list.column("number", width=60, anchor="center")
+        self.window_list.column("title", width=260)
+        self.window_list.column("master", width=50, anchor="center")
         self.window_list.column("hwnd", width=0, stretch=False)  # 隐藏hwnd列
         
         self.window_list.tag_configure("master", background="lightblue")
