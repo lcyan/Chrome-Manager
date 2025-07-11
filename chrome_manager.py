@@ -4793,7 +4793,7 @@ class ChromeManager:
             text="开始输入",
             command=lambda: self.execute_text_input(
                 dialog, 
-                file_path_var.get(), 
+                preview,
                 input_method.get(), 
                 overwrite_var.get(), 
                 False  # 永远不使用延迟输入
@@ -4802,23 +4802,23 @@ class ChromeManager:
             width=10
         ).pack(side=tk.RIGHT, padx=5)
         
-    def execute_text_input(self, dialog, file_path, input_method, overwrite, delayed):
+    def execute_text_input(self, dialog, preview, input_method, overwrite, delayed):
         """执行文本输入操作"""
-        if not file_path:
-            messagebox.showwarning("警告", "请选择文本文件！")
+
+        # 从预览区获取内容
+        preview_content = preview.get('1.0', tk.END).strip()
+        if not preview_content:
+            messagebox.showwarning("警告", "预览区内容为空！")
             return
-            
-        if not os.path.exists(file_path):
-            messagebox.showerror("错误", "文件不存在！")
-            return
-        
+        lines = [line for line in preview_content.splitlines() if line.strip()]
+
         # 关闭对话框
         dialog.destroy()
         
         # 调用文本输入功能
-        self.input_text_from_file(file_path, input_method, overwrite, delayed)
+        self.input_text_from_preview(lines, input_method, overwrite, delayed)
     
-    def input_text_from_file(self, file_path, input_method, overwrite, delayed):
+    def input_text_from_preview(self, lines, input_method, overwrite, delayed):
         """从文件输入文本到选中的窗口"""
         try:
             # 获取选中的窗口
@@ -4830,23 +4830,6 @@ class ChromeManager:
             
             if not selected_windows:
                 messagebox.showwarning("警告", "请先选择要操作的窗口！")
-                return
-            
-            # 读取文本文件
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    lines = [line.strip() for line in f.readlines() if line.strip()]
-            except UnicodeDecodeError:
-                # 尝试其它编码
-                try:
-                    with open(file_path, 'r', encoding='gbk') as f:
-                        lines = [line.strip() for line in f.readlines() if line.strip()]
-                except Exception as e:
-                    messagebox.showerror("错误", f"读取文件失败: {str(e)}")
-                    return
-            
-            if not lines:
-                messagebox.showwarning("警告", "文本文件为空！")
                 return
             
             # 准备文本行
